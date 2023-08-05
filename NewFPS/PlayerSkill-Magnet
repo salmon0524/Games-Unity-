@@ -1,0 +1,96 @@
+using System.Collections;
+using System.Collections.Generic;
+using UnityEngine;
+
+public class PlayerSkill : MonoBehaviour
+{
+
+    public float range = 5f;
+    public Camera fpscamera;
+    public GameObject MagnetBullet;
+    public Transform Magnet;
+    public float bulletSpeed = 10.0f;
+    private Projectile caughtprojectile = null;
+    public GameObject emptyObject;
+    public GameObject bulletOrigin;
+    private GameObject emptyObjectInstance;
+    private GameObject bulletEchoInstance;
+    public GameObject cameraPrefab;
+    private GameObject cameraInstance;
+
+
+
+    void Start()
+    {
+        
+    }
+
+    void Update()
+    {
+        if(Input.GetMouseButtonDown(0))
+        {
+            shoot();
+        }
+        if(Input.GetMouseButtonDown(1))
+        {
+            grab();
+        }
+        if(caughtprojectile != null && Input.GetMouseButton(1))
+        {
+            Control();
+        }
+        if(caughtprojectile != null && Input.GetMouseButtonUp(1))
+        {
+            Release();
+            caughtprojectile = null;
+        }
+    }
+
+void shoot()
+{
+    GameObject bulletInstance = Instantiate(
+    MagnetBullet, 
+    fpscamera.transform.position + fpscamera.transform.forward,
+    fpscamera.transform.rotation);
+
+}
+
+
+
+void grab()
+{
+    RaycastHit hit;
+    if(Physics.Raycast(fpscamera.transform.position, fpscamera.transform.forward, out hit, range))
+    {
+        Projectile projectile = hit.transform.GetComponent<Projectile>();
+        caughtprojectile = projectile;
+        if(projectile != null)
+        {
+            projectile.IsCaught = true;
+            emptyObject.transform.position = caughtprojectile.transform.position;
+            emptyObjectInstance = Instantiate(emptyObject, caughtprojectile.transform.position, Quaternion.identity);
+            bulletEchoInstance = Instantiate(bulletOrigin, caughtprojectile.transform.position, caughtprojectile.transform.rotation);
+            cameraInstance = Instantiate(cameraPrefab, caughtprojectile.transform.position - caughtprojectile.transform.forward * 3, Quaternion.LookRotation(caughtprojectile.transform.forward));
+            cameraInstance.transform.SetParent(caughtprojectile.transform);
+        }
+    }
+}
+
+void Control()
+{
+    Vector3 bulletPosRelativeToCam = fpscamera.transform.InverseTransformPoint(caughtprojectile.transform.position);
+    float dis = Vector3.Distance(fpscamera.transform.position, caughtprojectile.transform.position);
+    bulletPosRelativeToCam += new Vector3(Input.GetAxis("Mouse X"), Input.GetAxis("Mouse Y"), 0) * Time.deltaTime * 6.67f * dis;
+    caughtprojectile.transform.position = fpscamera.transform.TransformPoint(bulletPosRelativeToCam);
+    caughtprojectile.transform.LookAt(emptyObject.transform.position);
+    bulletEchoInstance.transform.rotation = caughtprojectile.transform.rotation;
+}
+
+void Release()
+{
+    caughtprojectile.IsCaught = false;
+    Destroy(emptyObjectInstance);
+    Destroy(bulletEchoInstance);
+    Destroy(cameraInstance);
+}
+}
