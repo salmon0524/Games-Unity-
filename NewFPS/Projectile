@@ -1,0 +1,35 @@
+using System.Collections;
+using System.Collections.Generic;
+using UnityEngine;
+
+public class Projectile : MonoBehaviour
+{
+    public bool IsCaught = false;
+    public float speed = 10.0f;
+    public float damage = 40f;
+    public float radius = 0.3f;
+
+
+    void Start()
+    {
+        
+    }
+
+    void Update()
+    {
+        if(!IsCaught)
+        {
+            transform.position += transform.forward * speed * Time.fixedDeltaTime;
+            Collider[] hitColliders = Physics.OverlapSphere(transform.position, radius);
+            foreach (var hitCollider in hitColliders)
+            {
+                if (hitCollider.gameObject != this.gameObject)
+                {
+                    Destroy(this.gameObject);
+                    break;
+                }
+            }
+        }
+    }
+
+}
